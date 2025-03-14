@@ -16,7 +16,7 @@ from .web_client.abstract_client import AbstractWebClient
 
 log = logging.getLogger(__name__)
 
-_UNPUBLISHED_SITEMAP_PATHS = {
+_UNPUBLISHED_SITEMAP_PATHS = [
     "sitemap.xml",
     "sitemap.xml.gz",
     "sitemap_index.xml",
@@ -31,8 +31,9 @@ _UNPUBLISHED_SITEMAP_PATHS = {
     "sitemap-news.xml",
     "sitemap_news.xml.gz",
     "sitemap-news.xml.gz",
-}
-"""Paths which are not exposed in robots.txt but might still contain a sitemap."""
+]
+"""Paths which are not exposed in robots.txt but might still contain a sitemap,
+ordered roughly by likelihood."""
 
 
 def sitemap_tree_for_homepage(
@@ -40,7 +41,7 @@ def sitemap_tree_for_homepage(
     web_client: Optional[AbstractWebClient] = None,
     use_robots: bool = True,
     use_known_paths: bool = True,
-    extra_known_paths: Optional[set] = None,
+    extra_known_paths: Optional[list] = None,
 ) -> AbstractSitemap:
     """
     Using a homepage URL, fetch the tree of sitemaps and pages listed in them.
@@ -57,7 +58,18 @@ def sitemap_tree_for_homepage(
     if not is_http_url(homepage_url):
         raise SitemapException(f"URL {homepage_url} is not a HTTP(s) URL.")
 
-    extra_known_paths = extra_known_paths or set()
+    known_paths = (
+        _UNPUBLISHED_SITEMAP_PATHS
+        if extra_known_paths is None
+        else (
+            extra_known_paths
+            + [
+                path
+                for path in _UNPUBLISHED_SITEMAP_PATHS
+                if path not in extra_known_paths
+            ]
+        )
+    )
 
     stripped_homepage_url = strip_url_to_homepage(url=homepage_url)
     if homepage_url != stripped_homepage_url:
@@ -89,7 +101,7 @@ def sitemap_tree_for_homepage(
                 sitemap_urls_found_in_robots_txt.add(sub_sitemap.url)
 
     if use_known_paths:
-        for unpublished_sitemap_path in _UNPUBLISHED_SITEMAP_PATHS | extra_known_paths:
+        for unpublished_sitemap_path in known_paths:
             unpublished_sitemap_url = homepage_url + unpublished_sitemap_path
 
             # Don't refetch URLs already found in robots.txt
