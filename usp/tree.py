@@ -42,6 +42,7 @@ def sitemap_tree_for_homepage(
     use_robots: bool = True,
     use_known_paths: bool = True,
     extra_known_paths: Optional[list] = None,
+    strip_homepage_url: bool = True,
 ) -> AbstractSitemap:
     """
     Using a homepage URL, fetch the tree of sitemaps and pages listed in them.
@@ -52,6 +53,7 @@ def sitemap_tree_for_homepage(
     :param use_robots: Whether to discover sitemaps through robots.txt.
     :param use_known_paths: Whether to discover sitemaps through common known paths.
     :param extra_known_paths: Extra paths to check for sitemaps.
+    :param strip_homepage_url: Whether to strip the homepage URL to subdomain root.
     :return: Root sitemap object of the fetched sitemap tree.
     """
 
@@ -71,12 +73,13 @@ def sitemap_tree_for_homepage(
         )
     )
 
-    stripped_homepage_url = strip_url_to_homepage(url=homepage_url)
-    if homepage_url != stripped_homepage_url:
-        log.warning(
-            f"Assuming that the homepage of {homepage_url} is {stripped_homepage_url}"
-        )
-        homepage_url = stripped_homepage_url
+    if strip_homepage_url:
+        stripped_homepage_url = strip_url_to_homepage(url=homepage_url)
+        if homepage_url != stripped_homepage_url:
+            log.warning(
+                f"Assuming that the homepage of {homepage_url} is {stripped_homepage_url}"
+            )
+            homepage_url = stripped_homepage_url
 
     if not homepage_url.endswith("/"):
         homepage_url += "/"
