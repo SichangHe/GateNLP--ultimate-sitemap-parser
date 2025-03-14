@@ -119,8 +119,10 @@ def sitemap_tree_for_homepage(
                 unpublished_sitemap = unpublished_sitemap_fetcher.sitemap()
 
                 # Skip the ones that weren't found
+                # Stop on the first sitemap found.
                 if not isinstance(unpublished_sitemap, InvalidSitemap):
                     sitemaps.append(unpublished_sitemap)
+                    break
 
     index_sitemap = IndexWebsiteSitemap(url=homepage_url, sub_sitemaps=sitemaps)
 
