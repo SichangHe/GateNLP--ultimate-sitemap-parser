@@ -7,8 +7,6 @@ from http import HTTPStatus
 from typing import Optional
 
 RETRYABLE_HTTP_STATUS_CODES = {
-    # Some servers return "400 Bad Request" initially but upon retry start working again, no idea why
-    int(HTTPStatus.BAD_REQUEST),
     # If we timed out requesting stuff, we can just try again
     int(HTTPStatus.REQUEST_TIMEOUT),
     # If we got rate limited, it makes sense to wait a bit

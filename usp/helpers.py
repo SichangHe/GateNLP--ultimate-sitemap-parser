@@ -137,8 +137,8 @@ _404_log_message = f"{HTTPStatus.NOT_FOUND} {HTTPStatus.NOT_FOUND.phrase}"
 def get_url_retry_on_client_errors(
     url: str,
     web_client: AbstractWebClient,
-    retry_count: int = 5,
-    sleep_between_retries: int = 1,
+    retry_count: int = 3,
+    sleep_between_retries: int = 60,
     quiet_404: bool = False,
 ) -> AbstractWebClientResponse:
     """
