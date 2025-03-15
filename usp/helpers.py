@@ -8,7 +8,7 @@ import re
 import sys
 import time
 from http import HTTPStatus
-from typing import Optional
+from typing import Any, Optional
 from urllib.parse import unquote_plus, urlparse, urlunparse
 
 from dateutil.parser import isoparse as dateutil_isoparse
@@ -30,7 +30,7 @@ __URL_REGEX = re.compile(r"^https?://[^\s/$.?#].[^\s]*$", re.IGNORECASE)
 HAS_DATETIME_NEW_ISOPARSER = sys.version_info >= (3, 11)
 
 
-def is_http_url(url: str) -> bool:
+def is_http_url(url: str | None) -> bool:
     """
     Returns true if URL is of the "http" ("https") scheme.
 
@@ -140,7 +140,7 @@ def get_url_retry_on_client_errors(
     retry_count: int = 3,
     sleep_between_retries: int = 60,
     quiet_404: bool = False,
-) -> AbstractWebClientResponse:
+) -> AbstractWebClientResponse | None:
     """
     Fetch URL, retry on retryable errors.
 
@@ -207,7 +207,7 @@ def __response_is_gzipped_data(
         return False
 
 
-def gunzip(data: bytes) -> bytes:
+def gunzip(data: bytes | None | Any) -> bytes:
     """
     Gunzip data.
 

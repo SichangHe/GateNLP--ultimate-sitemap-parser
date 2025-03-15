@@ -128,7 +128,7 @@ class SitemapFetcher:
         self._parent_urls = parent_urls or set()
         self._quiet_404 = quiet_404
 
-    def _fetch(self) -> AbstractWebClientResponse:
+    def _fetch(self) -> AbstractWebClientResponse | None:
         log.info(f"Fetching level {self._recursion_level} sitemap from {self._url}...")
         response = get_url_retry_on_client_errors(
             url=self._url, web_client=self._web_client, quiet_404=self._quiet_404
@@ -401,7 +401,11 @@ class XMLSitemapParser(AbstractSitemapParser):
         except Exception as ex:
             # Some sitemap XML files might end abruptly because webservers might be timing out on returning huge XML
             # files so don't return InvalidSitemap() but try to get as much pages as possible
-            log.error(f"Parsing sitemap from URL {self._url} failed: {ex}")
+            log.error(
+                f"Parsing sitemap from URL {self._url} failed: {ex}",
+                exc_info=True,
+                stack_info=True,
+            )
 
         if not self._concrete_parser:
             return InvalidSitemap(
@@ -537,6 +541,7 @@ class AbstractXMLSitemapParser(metaclass=abc.ABCMeta):
         :param attrs: element attributes
         """
         self._last_handler_call_was_xml_char_data = False
+        _ = name, attrs
         pass
 
     def xml_element_end(self, name: str) -> None:
@@ -549,6 +554,7 @@ class AbstractXMLSitemapParser(metaclass=abc.ABCMeta):
         # End of any element always resets last encountered character data
         self._last_char_data = ""
         self._last_handler_call_was_xml_char_data = False
+        _ = name
 
     def xml_char_data(self, data: str) -> None:
         """
@@ -662,6 +668,11 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
     class Image:
         """Data class for holding image data while parsing."""
 
+        loc: str | None
+        caption: str | None
+        geo_location: str | None
+        title: str | None
+        license: str | None
         __slots__ = ["loc", "caption", "geo_location", "title", "license"]
 
         def __init__(self):
@@ -682,6 +693,18 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
     class Page:
         """Simple data class for holding various properties for a single <url> entry while parsing."""
 
+        url: str | None
+        last_modified: str | None
+        change_frequency: str | None
+        priority: str | None
+        news_title: str | None
+        news_publish_date: str | None
+        news_publication_name: str | None
+        news_publication_language: str | None
+        news_access: str | None
+        news_genres: str | None
+        news_keywords: str | None
+        news_stock_tickers: str | None
         __slots__ = [
             "url",
             "last_modified",
@@ -732,21 +755,24 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
                 log.error("URL is unset")
                 return None
 
-            last_modified = html_unescape_strip(self.last_modified)
-            if last_modified:
-                last_modified = parse_iso8601_date(last_modified)
+            last_modified_str = html_unescape_strip(self.last_modified)
+            last_modified = (
+                parse_iso8601_date(last_modified_str) if last_modified_str else None
+            )
 
-            change_frequency = html_unescape_strip(self.change_frequency)
-            if change_frequency:
-                change_frequency = change_frequency.lower()
-                if SitemapPageChangeFrequency.has_value(change_frequency):
-                    change_frequency = SitemapPageChangeFrequency(change_frequency)
+            change_frequency_str = html_unescape_strip(self.change_frequency)
+            if change_frequency_str:
+                change_frequency_str = change_frequency_str.lower()
+                if SitemapPageChangeFrequency.has_value(change_frequency_str):
+                    change_frequency = SitemapPageChangeFrequency(change_frequency_str)
                 else:
                     log.warning(
                         "Invalid change frequency, defaulting to 'always'.".format()
                     )
                     change_frequency = SitemapPageChangeFrequency.ALWAYS
                 assert isinstance(change_frequency, SitemapPageChangeFrequency)
+            else:
+                change_frequency = None
 
             priority = html_unescape_strip(self.priority)
             if priority:
@@ -888,75 +914,93 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
             )
 
         if name == "sitemap:url":
+            assert self._current_page is not None
             if self._current_page.url not in self._page_urls:
                 self._pages.append(self._current_page)
                 self._page_urls.add(self._current_page.url)
             self._current_page = None
         elif name == "image:image":
+            assert self._current_page is not None
             self._current_page.images.append(self._current_image)
             self._current_image = None
         else:
             if name == "sitemap:loc":
                 # Every entry must have <loc>
                 self.__require_last_char_data_to_be_set(name=name)
+                assert self._current_page is not None
                 self._current_page.url = self._last_char_data
 
             elif name == "sitemap:lastmod":
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.last_modified = self._last_char_data
 
             elif name == "sitemap:changefreq":
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.change_frequency = self._last_char_data
 
             elif name == "sitemap:priority":
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.priority = self._last_char_data
 
             elif name == "news:name":  # news/publication/name
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.news_publication_name = self._last_char_data
 
             elif name == "news:language":  # news/publication/language
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.news_publication_language = self._last_char_data
 
             elif name == "news:publication_date":
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.news_publish_date = self._last_char_data
 
             elif name == "news:title":
                 # Every Google News sitemap entry must have <title>
                 self.__require_last_char_data_to_be_set(name=name)
+                assert self._current_page is not None
                 self._current_page.news_title = self._last_char_data
 
             elif name == "news:access":
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.news_access = self._last_char_data
 
             elif name == "news:keywords":
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.news_keywords = self._last_char_data
 
             elif name == "news:stock_tickers":
                 # Element might be present but character data might be empty
+                assert self._current_page is not None
                 self._current_page.news_stock_tickers = self._last_char_data
 
             elif name == "image:loc":
                 # Every image entry must have <loc>
                 self.__require_last_char_data_to_be_set(name=name)
+                assert self._current_image is not None
                 self._current_image.loc = self._last_char_data
 
             elif name == "image:caption":
+                assert self._current_image is not None
                 self._current_image.caption = self._last_char_data
 
             elif name == "image:geo_location":
+                assert self._current_image is not None
                 self._current_image.geo_location = self._last_char_data
 
             elif name == "image:title":
+                assert self._current_image is not None
                 self._current_image.title = self._last_char_data
 
             elif name == "image:license":
+                assert self._current_image is not None
                 self._current_image.license = self._last_char_data
 
         super().xml_element_end(name=name)
@@ -986,6 +1030,10 @@ class PagesRSSSitemapParser(AbstractXMLSitemapParser):
         Data class for holding various properties for a single RSS <item> while parsing.
         """
 
+        link: str | None
+        title: str | None
+        description: str | None
+        publication_date: str | None
         __slots__ = [
             "link",
             "title",
@@ -1018,18 +1066,22 @@ class PagesRSSSitemapParser(AbstractXMLSitemapParser):
 
             title = html_unescape_strip(self.title)
             description = html_unescape_strip(self.description)
-            if not (title or description):
+            title_or_desc = title or description
+            if not title_or_desc:
                 log.error("Both title and description are unset")
                 return None
 
-            publication_date = html_unescape_strip(self.publication_date)
-            if publication_date:
-                publication_date = parse_rfc2822_date(publication_date)
+            publication_date_str = html_unescape_strip(self.publication_date)
+            publication_date = (
+                parse_rfc2822_date(publication_date_str)
+                if publication_date_str
+                else None
+            )
 
             return SitemapPage(
                 url=link,
                 news_story=SitemapNewsStory(
-                    title=title or description,
+                    title=title_or_desc,
                     publish_date=publication_date,
                 ),
             )
@@ -1119,6 +1171,10 @@ class PagesAtomSitemapParser(AbstractXMLSitemapParser):
     class Page:
         """Data class for holding various properties for a single Atom <entry> while parsing."""
 
+        link: str | None
+        title: str | None
+        description: str | None
+        publication_date: str | None
         __slots__ = [
             "link",
             "title",
@@ -1151,18 +1207,22 @@ class PagesAtomSitemapParser(AbstractXMLSitemapParser):
 
             title = html_unescape_strip(self.title)
             description = html_unescape_strip(self.description)
-            if not (title or description):
+            title_or_desc = title or description
+            if not title_or_desc:
                 log.error("Both title and description are unset")
                 return None
 
-            publication_date = html_unescape_strip(self.publication_date)
-            if publication_date:
-                publication_date = parse_iso8601_date(publication_date)
+            publication_date_str = html_unescape_strip(self.publication_date)
+            publication_date = (
+                parse_iso8601_date(publication_date_str)
+                if publication_date_str
+                else None
+            )
 
             return SitemapPage(
                 url=link,
                 news_story=SitemapNewsStory(
-                    title=title or description,
+                    title=title_or_desc,
                     publish_date=publication_date,
                 ),
             )

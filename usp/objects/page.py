@@ -28,13 +28,13 @@ class SitemapNewsStory:
     def __init__(
         self,
         title: str,
-        publish_date: datetime.datetime,
+        publish_date: datetime.datetime | None,
         publication_name: Optional[str] = None,
         publication_language: Optional[str] = None,
         access: Optional[str] = None,
-        genres: List[str] = None,
-        keywords: List[str] = None,
-        stock_tickers: List[str] = None,
+        genres: List[str] | None = None,
+        keywords: List[str] | None = None,
+        stock_tickers: List[str] | None = None,
     ):
         """
         Initialize a new Google News story.
@@ -143,7 +143,7 @@ class SitemapNewsStory:
         return self.__title
 
     @property
-    def publish_date(self) -> datetime.datetime:
+    def publish_date(self) -> datetime.datetime | None:
         """Get the  story publication date."""
         return self.__publish_date
 
