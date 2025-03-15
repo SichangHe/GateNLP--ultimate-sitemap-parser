@@ -83,6 +83,7 @@ class SitemapFetcher:
         self,
         url: str,
         recursion_level: int,
+        wait: float | None = None,
         web_client: Optional[AbstractWebClient] = None,
         parent_urls: Optional[Set[str]] = None,
         quiet_404: bool = False,
@@ -91,6 +92,8 @@ class SitemapFetcher:
 
         :param url: URL of the sitemap to fetch and parse.
         :param recursion_level: current recursion level of parser
+        :param wait: Time to wait between requests if Web Client is not provided,
+        in seconds. Must be set if no web client is provided.
         :param web_client: Web client to use. If ``None``, a :class:`~.RequestsWebClient` will be used.
         :param parent_urls: Set of parent URLs that led to this sitemap.
         :param quiet_404: Whether 404 errors are expected and should be logged at a reduced level, useful for speculative fetching of known URLs.
@@ -118,7 +121,10 @@ class SitemapFetcher:
             )
 
         if not web_client:
-            web_client = RequestsWebClient()
+            assert wait is not None, (
+                "Wait time must be set if no web client is provided."
+            )
+            web_client = RequestsWebClient(wait)
 
         web_client.set_max_response_data_length(self.__MAX_SITEMAP_SIZE)
 

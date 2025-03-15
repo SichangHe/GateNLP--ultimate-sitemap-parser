@@ -38,6 +38,7 @@ ordered roughly by likelihood."""
 
 def sitemap_tree_for_homepage(
     homepage_url: str,
+    wait: float | None = None,
     web_client: Optional[AbstractWebClient] = None,
     use_robots: bool = True,
     use_known_paths: bool = True,
@@ -48,6 +49,8 @@ def sitemap_tree_for_homepage(
     Using a homepage URL, fetch the tree of sitemaps and pages listed in them.
 
     :param homepage_url: Homepage URL of a website to fetch the sitemap tree for, e.g. "http://www.example.com/".
+    :param wait: Number of seconds to wait between requests.
+    Has to be set if no web client is provided.
     :param web_client: Custom web client implementation to use when fetching sitemaps.
         If ``None``, a :class:`~.RequestsWebClient` will be used.
     :param use_robots: Whether to discover sitemaps through robots.txt.
@@ -57,6 +60,9 @@ def sitemap_tree_for_homepage(
     :return: Root sitemap object of the fetched sitemap tree.
     """
 
+    assert web_client is not None or wait is not None, (
+        "Either web_client or wait must be set."
+    )
     if not is_http_url(homepage_url):
         raise SitemapException(f"URL {homepage_url} is not a HTTP(s) URL.")
 
@@ -91,6 +97,7 @@ def sitemap_tree_for_homepage(
     if use_robots:
         robots_txt_fetcher = SitemapFetcher(
             url=robots_txt_url,
+            wait=wait,
             web_client=web_client,
             recursion_level=0,
             parent_urls=set(),
@@ -111,6 +118,7 @@ def sitemap_tree_for_homepage(
             if unpublished_sitemap_url not in sitemap_urls_found_in_robots_txt:
                 unpublished_sitemap_fetcher = SitemapFetcher(
                     url=unpublished_sitemap_url,
+                    wait=wait,
                     web_client=web_client,
                     recursion_level=0,
                     parent_urls=sitemap_urls_found_in_robots_txt,

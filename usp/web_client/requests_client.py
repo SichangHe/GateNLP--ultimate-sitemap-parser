@@ -96,8 +96,8 @@ class RequestsWebClient(AbstractWebClient):
 
     def __init__(
         self,
+        wait: float,
         verify=True,
-        wait: Optional[float] = None,
         random_wait: bool = False,
         session: Optional[requests.Session] = None,
     ):
