@@ -13,6 +13,7 @@ import re
 import xml.parsers.expat
 from collections import OrderedDict
 from decimal import Decimal, InvalidOperation
+from random import random
 from typing import Dict, Optional, Set
 
 from .exceptions import SitemapException, SitemapXMLParsingException
@@ -75,6 +76,7 @@ class SitemapFetcher:
         "_url",
         "_recursion_level",
         "_web_client",
+        "_max_n_sitemap",
         "_parent_urls",
         "_quiet_404",
     ]
@@ -83,6 +85,7 @@ class SitemapFetcher:
         self,
         url: str,
         recursion_level: int,
+        max_n_sitemap: list[int],
         wait: float | None = None,
         web_client: Optional[AbstractWebClient] = None,
         parent_urls: Optional[Set[str]] = None,
@@ -95,6 +98,7 @@ class SitemapFetcher:
         :param wait: Time to wait between requests if Web Client is not provided,
         in seconds. Must be set if no web client is provided.
         :param web_client: Web client to use. If ``None``, a :class:`~.RequestsWebClient` will be used.
+        :param max_n_sitemap: Maximum number of sitemaps to fetch, stored in the first position of a list (for interior mutability) if exists.
         :param parent_urls: Set of parent URLs that led to this sitemap.
         :param quiet_404: Whether 404 errors are expected and should be logged at a reduced level, useful for speculative fetching of known URLs.
 
@@ -131,6 +135,7 @@ class SitemapFetcher:
         self._url = url
         self._web_client = web_client
         self._recursion_level = recursion_level
+        self._max_n_sitemap = max_n_sitemap
         self._parent_urls = parent_urls or set()
         self._quiet_404 = quiet_404
 
@@ -178,6 +183,7 @@ class SitemapFetcher:
                 content=response_content,
                 recursion_level=self._recursion_level,
                 web_client=self._web_client,
+                max_n_sitemap=self._max_n_sitemap,
                 parent_urls=self._parent_urls,
             )
 
@@ -189,6 +195,7 @@ class SitemapFetcher:
                     content=response_content,
                     recursion_level=self._recursion_level,
                     web_client=self._web_client,
+                    max_n_sitemap=self._max_n_sitemap,
                     parent_urls=self._parent_urls,
                 )
             else:
@@ -197,11 +204,14 @@ class SitemapFetcher:
                     content=response_content,
                     recursion_level=self._recursion_level,
                     web_client=self._web_client,
+                    max_n_sitemap=self._max_n_sitemap,
                     parent_urls=self._parent_urls,
                 )
 
         log.info(f"Parsing sitemap from URL {self._url}...")
         sitemap = parser.sitemap()
+        if len(self._max_n_sitemap) > 0:
+            self._max_n_sitemap[0] -= 1
 
         return sitemap
 
@@ -222,6 +232,7 @@ class SitemapStrParser(SitemapFetcher):
         """
         super().__init__(
             url="http://usp-local-dummy.local/",
+            max_n_sitemap=[],
             recursion_level=0,
             web_client=LocalWebClient(),
         )
@@ -239,6 +250,7 @@ class AbstractSitemapParser(metaclass=abc.ABCMeta):
         "_content",
         "_web_client",
         "_recursion_level",
+        "_max_n_sitemap",
         "_parent_urls",
     ]
 
@@ -248,12 +260,14 @@ class AbstractSitemapParser(metaclass=abc.ABCMeta):
         content: str,
         recursion_level: int,
         web_client: AbstractWebClient,
+        max_n_sitemap: list[int],
         parent_urls: Set[str],
     ):
         self._url = url
         self._content = content
         self._recursion_level = recursion_level
         self._web_client = web_client
+        self._max_n_sitemap = max_n_sitemap
         self._parent_urls = parent_urls
 
     @abc.abstractmethod
@@ -275,6 +289,7 @@ class IndexRobotsTxtSitemapParser(AbstractSitemapParser):
         content: str,
         recursion_level: int,
         web_client: AbstractWebClient,
+        max_n_sitemap: list[int],
         parent_urls: Set[str],
     ):
         super().__init__(
@@ -282,6 +297,7 @@ class IndexRobotsTxtSitemapParser(AbstractSitemapParser):
             content=content,
             recursion_level=recursion_level,
             web_client=web_client,
+            max_n_sitemap=max_n_sitemap,
             parent_urls=parent_urls,
         )
 
@@ -315,6 +331,7 @@ class IndexRobotsTxtSitemapParser(AbstractSitemapParser):
             try:
                 fetcher = SitemapFetcher(
                     url=sitemap_url,
+                    max_n_sitemap=self._max_n_sitemap,
                     recursion_level=self._recursion_level + 1,
                     web_client=self._web_client,
                     parent_urls=self._parent_urls | {self._url},
@@ -331,7 +348,11 @@ class IndexRobotsTxtSitemapParser(AbstractSitemapParser):
                 )
             sub_sitemaps.append(fetched_sitemap)
 
-        index_sitemap = IndexRobotsTxtSitemap(url=self._url, sub_sitemaps=sub_sitemaps)
+        index_sitemap = IndexRobotsTxtSitemap(
+            url=self._url, sub_sitemaps=sub_sitemaps, max_n_sitemap=self._max_n_sitemap
+        )
+        if len(self._max_n_sitemap) > 0:
+            self._max_n_sitemap[0] -= 1
 
         return index_sitemap
 
@@ -357,6 +378,8 @@ class PlainTextSitemapParser(AbstractSitemapParser):
             pages.append(page)
 
         text_sitemap = PagesTextSitemap(url=self._url, pages=pages)
+        if len(self._max_n_sitemap) > 0:
+            self._max_n_sitemap[0] -= 1
 
         return text_sitemap
 
@@ -380,6 +403,7 @@ class XMLSitemapParser(AbstractSitemapParser):
         content: str,
         recursion_level: int,
         web_client: AbstractWebClient,
+        max_n_sitemap: list[int],
         parent_urls: Set[str],
     ):
         super().__init__(
@@ -387,6 +411,7 @@ class XMLSitemapParser(AbstractSitemapParser):
             content=content,
             recursion_level=recursion_level,
             web_client=web_client,
+            max_n_sitemap=max_n_sitemap,
             parent_urls=parent_urls,
         )
 
@@ -418,6 +443,8 @@ class XMLSitemapParser(AbstractSitemapParser):
                 url=self._url,
                 reason=f"No parsers support sitemap from {self._url}",
             )
+        if len(self._max_n_sitemap) > 0:
+            self._max_n_sitemap[0] -= 1
 
         return self._concrete_parser.sitemap()
 
@@ -485,6 +512,7 @@ class XMLSitemapParser(AbstractSitemapParser):
                     url=self._url,
                     web_client=self._web_client,
                     recursion_level=self._recursion_level,
+                    max_n_sitemap=self._max_n_sitemap,
                     parent_urls=self._parent_urls,
                 )
 
@@ -601,6 +629,7 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
         "_recursion_level",
         # List of sub-sitemap URLs found in this index sitemap
         "_sub_sitemap_urls",
+        "_max_n_sitemap",
         "_parent_urls",
     ]
 
@@ -609,6 +638,7 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
         url: str,
         web_client: AbstractWebClient,
         recursion_level: int,
+        max_n_sitemap: list[int],
         parent_urls: Set[str],
     ):
         super().__init__(url=url)
@@ -616,6 +646,7 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
         self._web_client = web_client
         self._recursion_level = recursion_level
         self._sub_sitemap_urls = []
+        self._max_n_sitemap = max_n_sitemap
         self._parent_urls = parent_urls
 
     def xml_element_end(self, name: str) -> None:
@@ -634,12 +665,25 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
 
     def sitemap(self) -> AbstractSitemap:
         sub_sitemaps = []
+        if (
+            len(self._max_n_sitemap) > 0
+            and len(self._sub_sitemap_urls) > self._max_n_sitemap[0]
+        ):
+            log.info(
+                "Sampling %d sub-sitemap from %d.",
+                self._max_n_sitemap[0],
+                len(self._sub_sitemap_urls),
+            )
+            self._sub_sitemap_urls = random.sample(
+                self._sub_sitemap_urls, self._max_n_sitemap[0]
+            )
 
         for sub_sitemap_url in self._sub_sitemap_urls:
             # URL might be invalid, or recursion limit might have been reached
             try:
                 fetcher = SitemapFetcher(
                     url=sub_sitemap_url,
+                    max_n_sitemap=self._max_n_sitemap,
                     recursion_level=self._recursion_level + 1,
                     web_client=self._web_client,
                     parent_urls=self._parent_urls | {self._url},
@@ -657,7 +701,9 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
 
             sub_sitemaps.append(fetched_sitemap)
 
-        index_sitemap = IndexXMLSitemap(url=self._url, sub_sitemaps=sub_sitemaps)
+        index_sitemap = IndexXMLSitemap(
+            url=self._url, sub_sitemaps=sub_sitemaps, max_n_sitemap=self._max_n_sitemap
+        )
 
         return index_sitemap
 

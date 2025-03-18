@@ -14,6 +14,7 @@ import os
 import pickle
 import tempfile
 from functools import cache
+from random import random
 from typing import Iterator, List, Tuple
 
 from .page import SitemapPage
@@ -51,15 +52,18 @@ class AbstractSitemap(metaclass=abc.ABCMeta):
 
     __slots__ = [
         "__url",
+        "_max_n_sitemap",
     ]
 
-    def __init__(self, url: str):
+    def __init__(self, url: str, max_n_sitemap: list[int]):
         """
         Initialize a new sitemap.
 
         :param url: Sitemap URL.
+        :param max_n_sitemap: Maximum number of sub-sitemaps in the first spot of the list if exists.
         """
         self.__url = url
+        self._max_n_sitemap = max_n_sitemap
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, AbstractSitemap):
@@ -93,6 +97,7 @@ class AbstractSitemap(metaclass=abc.ABCMeta):
         :return: Dictionary representation of the sitemap.
         """
 
+        _ = with_pages
         return {
             "url": self.url,
         }
@@ -153,7 +158,7 @@ class InvalidSitemap(AbstractSitemap):
         :param url: Sitemap URL.
         :param reason: Reason why the sitemap is deemed invalid.
         """
-        super().__init__(url=url)
+        super().__init__(url=url, max_n_sitemap=[])
         self.__reason = reason
         log.info(f"Invalid sitemap: {url}, reason: {reason}")
 
@@ -220,12 +225,13 @@ class AbstractPagesSitemap(AbstractSitemap, metaclass=abc.ABCMeta):
         :param url: Sitemap URL.
         :param pages: List of pages found in a sitemap.
         """
-        super().__init__(url=url)
+        super().__init__(url=url, max_n_sitemap=[])
 
         self._dump_pages(pages)
 
     def _dump_pages(self, pages: List[SitemapPage]):
         temp_file, self.__pages_temp_file_path = tempfile.mkstemp()
+        _ = temp_file
         with open(self.__pages_temp_file_path, "wb") as tmp:
             pickle.dump(pages, tmp, protocol=pickle.HIGHEST_PROTOCOL)
 
@@ -339,16 +345,27 @@ class AbstractIndexSitemap(AbstractSitemap):
 
     __slots__ = [
         "__sub_sitemaps",
+        "_max_n_sitemap",
     ]
 
-    def __init__(self, url: str, sub_sitemaps: List[AbstractSitemap]):
+    def __init__(
+        self, url: str, sub_sitemaps: List[AbstractSitemap], max_n_sitemap: list[int]
+    ):
         """
         Initialize index sitemap.
 
         :param url: Sitemap URL.
         :param sub_sitemaps: Sub-sitemaps that are linked to from this sitemap.
+        :param max_n_sitemap: Maximum number of sub-sitemaps in the first spot of the list if exists.
         """
-        super().__init__(url=url)
+        super().__init__(url=url, max_n_sitemap=max_n_sitemap)
+        if len(max_n_sitemap) > 0 and len(sub_sitemaps) > max_n_sitemap[0]:
+            log.info(
+                "Sampling %d sub-sitemap from %d.", max_n_sitemap[0], len(sub_sitemaps)
+            )
+            sub_sitemaps = random.sample(sub_sitemaps, max_n_sitemap[0])
+        else:
+            log.info("Found %d sub-sitemaps.", len(sub_sitemaps))
         self.__sub_sitemaps = sub_sitemaps
 
     def __eq__(self, other) -> bool:

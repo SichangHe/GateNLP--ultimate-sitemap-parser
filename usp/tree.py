@@ -43,6 +43,7 @@ def sitemap_tree_for_homepage(
     use_robots: bool = True,
     use_known_paths: bool = True,
     extra_known_paths: Optional[list] = None,
+    max_n_sitemap: int | None = None,
     strip_homepage_url: bool = True,
 ) -> AbstractSitemap:
     """
@@ -56,6 +57,7 @@ def sitemap_tree_for_homepage(
     :param use_robots: Whether to discover sitemaps through robots.txt.
     :param use_known_paths: Whether to discover sitemaps through common known paths.
     :param extra_known_paths: Extra paths to check for sitemaps.
+    :param max_n_sitemap: Maximum number of sitemaps to fetch.
     :param strip_homepage_url: Whether to strip the homepage URL to subdomain root.
     :return: Root sitemap object of the fetched sitemap tree.
     """
@@ -92,6 +94,7 @@ def sitemap_tree_for_homepage(
     robots_txt_url = homepage_url + "robots.txt"
 
     sitemaps = []
+    max_n_sitemap_list = [] if max_n_sitemap is None else [max_n_sitemap]
 
     sitemap_urls_found_in_robots_txt = set()
     if use_robots:
@@ -100,6 +103,7 @@ def sitemap_tree_for_homepage(
             wait=wait,
             web_client=web_client,
             recursion_level=0,
+            max_n_sitemap=max_n_sitemap_list,
             parent_urls=set(),
         )
         robots_txt_sitemap = robots_txt_fetcher.sitemap()
@@ -121,6 +125,7 @@ def sitemap_tree_for_homepage(
                     wait=wait,
                     web_client=web_client,
                     recursion_level=0,
+                    max_n_sitemap=max_n_sitemap_list,
                     parent_urls=sitemap_urls_found_in_robots_txt,
                     quiet_404=True,
                 )
@@ -132,7 +137,9 @@ def sitemap_tree_for_homepage(
                     sitemaps.append(unpublished_sitemap)
                     break
 
-    index_sitemap = IndexWebsiteSitemap(url=homepage_url, sub_sitemaps=sitemaps)
+    index_sitemap = IndexWebsiteSitemap(
+        url=homepage_url, max_n_sitemap=max_n_sitemap_list, sub_sitemaps=sitemaps
+    )
 
     return index_sitemap
 
