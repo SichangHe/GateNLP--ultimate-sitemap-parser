@@ -230,7 +230,10 @@ class AbstractPagesSitemap(AbstractSitemap, metaclass=abc.ABCMeta):
             pickle.dump(pages, tmp, protocol=pickle.HIGHEST_PROTOCOL)
 
     def __del__(self):
-        os.unlink(self.__pages_temp_file_path)
+        if hasattr(self, "__pages_temp_file_path") and os.path.exists(
+            self.__pages_temp_file_path
+        ):
+            os.unlink(self.__pages_temp_file_path)
 
     def __eq__(self, other) -> bool:
         if not isinstance(other, AbstractPagesSitemap):

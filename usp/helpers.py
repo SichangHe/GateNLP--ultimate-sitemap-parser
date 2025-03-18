@@ -259,7 +259,7 @@ def ungzipped_response_content(
             data = gunzip(data)
         except GunzipException as ex:
             # In case of an error, just assume that it's one of the non-gzipped sitemaps with ".gz" extension
-            log.warning(
+            log.debug(
                 f"Unable to gunzip response {response}, maybe it's a non-gzipped sitemap: {ex}"
             )
 
