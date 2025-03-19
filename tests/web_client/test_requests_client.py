@@ -19,7 +19,7 @@ class TestRequestsClient:
 
     @pytest.fixture
     def client(self):
-        return RequestsWebClient()
+        return RequestsWebClient(wait=0)
 
     def test_get(self, client, requests_mock):
         test_url = self.TEST_BASE_URL + "/"
@@ -157,7 +157,7 @@ class TestRequestsClient:
         return mocker.patch("usp.web_client.abstract_client.time.sleep")
 
     def test_no_request_wait(self, mocked_sleep):
-        client = RequestsWebClient()
+        client = RequestsWebClient(wait=0)
         client.get(self.TEST_BASE_URL + "/page1.html")
         client.get(self.TEST_BASE_URL + "/page2.html")
         mocked_sleep.assert_not_called()

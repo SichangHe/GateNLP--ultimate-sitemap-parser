@@ -61,7 +61,9 @@ class TestTreeBasic(TreeTestBase):
             content=sitemap_xml_body_encoded,
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
         assert len(list(actual_sitemap_tree.all_pages())) == 1
         assert len(list(actual_sitemap_tree.all_sitemaps())) == 2
 
@@ -99,7 +101,7 @@ class TestTreeBasic(TreeTestBase):
             ),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
         sitemaps = list(tree.all_sitemaps())
 
         assert type(sitemaps[-1]) is InvalidSitemap
@@ -140,7 +142,7 @@ class TestTreeBasic(TreeTestBase):
             ),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
         sitemaps = list(tree.all_sitemaps())
         assert type(sitemaps[-1]) is InvalidSitemap
 
@@ -180,7 +182,7 @@ class TestTreeBasic(TreeTestBase):
             text=(textwrap.dedent(sitemap_xml).strip()),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
         assert len(list(tree.all_pages())) == 50
 
     def test_truncated_sitemap_mid_url(self, requests_mock):
@@ -223,7 +225,7 @@ class TestTreeBasic(TreeTestBase):
             text=(textwrap.dedent(sitemap_xml).strip()),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
         all_pages = list(tree.all_pages())
         assert len(all_pages) == 49
         assert all_pages[-1].url.endswith("page_48.html")

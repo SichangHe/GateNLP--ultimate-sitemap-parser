@@ -230,11 +230,15 @@ class TestTreeBasic(TreeTestBase):
                             ],
                         ),
                     ],
+                    max_n_sitemap=[],
                 )
             ],
+            max_n_sitemap=[],
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         expected_lines = str(expected_sitemap_tree).split()
         actual_lines = str(actual_sitemap_tree).split()
@@ -344,11 +348,15 @@ class TestTreeBasic(TreeTestBase):
                             pages=[],
                         ),
                     ],
+                    max_n_sitemap=[],
                 )
             ],
+            max_n_sitemap=[],
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         assert expected_sitemap_tree == actual_sitemap_tree
 

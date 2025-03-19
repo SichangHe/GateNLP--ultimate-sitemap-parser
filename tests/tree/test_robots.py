@@ -36,11 +36,15 @@ class TestTreeRobots(TreeTestBase):
                 IndexRobotsTxtSitemap(
                     url=f"{self.TEST_BASE_URL}/robots.txt",
                     sub_sitemaps=[],
+                    max_n_sitemap=[],
                 )
             ],
+            max_n_sitemap=[],
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         assert expected_sitemap_tree == actual_sitemap_tree
 
@@ -66,9 +70,12 @@ class TestTreeRobots(TreeTestBase):
         expected_sitemap_tree = IndexWebsiteSitemap(
             url=f"{self.TEST_BASE_URL}/",
             sub_sitemaps=[],
+            max_n_sitemap=[],
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         assert expected_sitemap_tree == actual_sitemap_tree
 
@@ -116,6 +123,8 @@ class TestTreeRobots(TreeTestBase):
             ).strip(),
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
         assert len(list(actual_sitemap_tree.all_pages())) == 1
         assert len(list(actual_sitemap_tree.all_sitemaps())) == 2

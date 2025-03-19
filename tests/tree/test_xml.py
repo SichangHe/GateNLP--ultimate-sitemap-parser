@@ -84,7 +84,9 @@ class TestTreeXML(TreeTestBase):
             ).strip(),
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         assert isinstance(actual_sitemap_tree, IndexWebsiteSitemap)
         assert len(actual_sitemap_tree.sub_sitemaps) == 1
@@ -125,11 +127,15 @@ class TestTreeXML(TreeTestBase):
                 IndexRobotsTxtSitemap(
                     url=f"{self.TEST_BASE_URL}/robots.txt",
                     sub_sitemaps=[],
+                    max_n_sitemap=[],
                 )
             ],
+            max_n_sitemap=[],
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         assert expected_sitemap_tree == actual_sitemap_tree
 
@@ -201,6 +207,7 @@ class TestTreeXML(TreeTestBase):
                             ],
                         ),
                     ],
+                    max_n_sitemap=[],
                 ),
                 PagesXMLSitemap(
                     url=f"{self.TEST_BASE_URL}/sitemap_index.xml",
@@ -211,8 +218,11 @@ class TestTreeXML(TreeTestBase):
                     ],
                 ),
             ],
+            max_n_sitemap=[],
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         assert expected_sitemap_tree == actual_sitemap_tree

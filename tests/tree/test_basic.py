@@ -111,15 +111,21 @@ class TestTreeBasic(TreeTestBase):
                                             ),
                                         ),
                                     ],
+                                    max_n_sitemap=[],
                                 ),
                             ],
+                            max_n_sitemap=[],
                         ),
                     ],
+                    max_n_sitemap=[],
                 )
             ],
+            max_n_sitemap=[],
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         expected_lines = str(expected_sitemap_tree).split()
         actual_lines = str(actual_sitemap_tree).split()
@@ -235,7 +241,9 @@ class TestTreeBasic(TreeTestBase):
             ).strip(),
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         # Don't do an in-depth check, we just need to make sure that gunzip works
         assert isinstance(actual_sitemap_tree, IndexWebsiteSitemap)
@@ -322,7 +330,9 @@ class TestTreeBasic(TreeTestBase):
             content=gzip(sitemap_xml),
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         assert len(list(actual_sitemap_tree.all_pages())) == page_count
         assert len(list(actual_sitemap_tree.all_sitemaps())) == 2

@@ -15,7 +15,7 @@ class TestTreeSave(TreeTestBase):
     def tree(self, requests_mock):
         self.init_basic_sitemap(requests_mock)
 
-        return sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        return sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
 
     def test_pickle(self, tree, tmp_path):
         with open(tmp_path / "sitemap.pickle", "wb") as f:

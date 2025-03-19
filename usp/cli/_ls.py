@@ -106,6 +106,7 @@ def ls(args):
         args.url,
         use_robots=not args.no_robots,
         use_known_paths=not args.no_known,
+        wait=1,
     )
 
     strip_prefix = ""

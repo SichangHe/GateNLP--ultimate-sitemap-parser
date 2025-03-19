@@ -48,7 +48,7 @@ class TestTreeAntiRecursion(TreeTestBase):
             status_code=301,
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
         sub_sitemaps = list(tree.all_sitemaps())
         assert all(type(x) is not InvalidSitemap for x in sub_sitemaps[:-1])
         assert type(sub_sitemaps[-1]) is InvalidSitemap
@@ -112,7 +112,7 @@ class TestTreeAntiRecursion(TreeTestBase):
             ),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
         sub_sitemaps = list(tree.all_sitemaps())
         assert all(type(x) is not InvalidSitemap for x in sub_sitemaps[:-1])
         assert type(sub_sitemaps[-1]) is InvalidSitemap
@@ -156,7 +156,7 @@ class TestTreeAntiRecursion(TreeTestBase):
             ),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
 
         sub_sitemaps = list(tree.all_sitemaps())
         assert len(sub_sitemaps) == 3  # robots, sitemap.xml, invalid
@@ -208,7 +208,7 @@ class TestTreeAntiRecursion(TreeTestBase):
             status_code=301,
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
         # homepage should only have robots child, not sitemap discovered through known URL
         assert len(tree.sub_sitemaps) == 1
         assert type(tree.sub_sitemaps[0]) is IndexRobotsTxtSitemap

@@ -68,7 +68,9 @@ class TestTreeBasic(TreeTestBase):
             ),
         )
 
-        actual_sitemap_tree = sitemap_tree_for_homepage(homepage_url=self.TEST_BASE_URL)
+        actual_sitemap_tree = sitemap_tree_for_homepage(
+            homepage_url=self.TEST_BASE_URL, wait=0
+        )
 
         assert isinstance(actual_sitemap_tree, IndexWebsiteSitemap)
         assert len(actual_sitemap_tree.sub_sitemaps) == 1

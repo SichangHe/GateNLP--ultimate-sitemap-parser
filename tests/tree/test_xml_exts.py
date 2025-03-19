@@ -60,7 +60,7 @@ class TestXMLExts(TreeTestBase):
             ).strip(),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
 
         expected_sitemap_tree = IndexWebsiteSitemap(
             url=f"{self.TEST_BASE_URL}/",
@@ -97,8 +97,10 @@ class TestXMLExts(TreeTestBase):
                             ],
                         )
                     ],
+                    max_n_sitemap=[],
                 )
             ],
+            max_n_sitemap=[],
         )
 
         print(tree.to_dict())
@@ -150,7 +152,7 @@ class TestXMLHrefLang(TreeTestBase):
             ).strip(),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
 
         pages = list(tree.all_pages())
         assert pages[0].alternates == [
@@ -216,7 +218,7 @@ class TestXMLHrefLang(TreeTestBase):
             ).strip(),
         )
 
-        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL)
+        tree = sitemap_tree_for_homepage(self.TEST_BASE_URL, wait=0)
 
         pages = list(tree.all_pages())
         assert pages[0].alternates is None
