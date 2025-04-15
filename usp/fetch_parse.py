@@ -9,11 +9,11 @@
 
 import abc
 import logging
+import random
 import re
 import xml.parsers.expat
 from collections import OrderedDict
 from decimal import Decimal, InvalidOperation
-from random import random
 from typing import Dict, Optional, Set
 
 from .exceptions import SitemapException, SitemapXMLParsingException
@@ -669,14 +669,13 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
             len(self._max_n_sitemap) > 0
             and len(self._sub_sitemap_urls) > self._max_n_sitemap[0]
         ):
+            n_sample = max(0, self._max_n_sitemap[0])
             log.info(
                 "Sampling %d sub-sitemap from %d.",
                 self._max_n_sitemap[0],
                 len(self._sub_sitemap_urls),
             )
-            self._sub_sitemap_urls = random.sample(
-                self._sub_sitemap_urls, self._max_n_sitemap[0]
-            )
+            self._sub_sitemap_urls = random.sample(self._sub_sitemap_urls, n_sample)
 
         for sub_sitemap_url in self._sub_sitemap_urls:
             # URL might be invalid, or recursion limit might have been reached

@@ -12,9 +12,9 @@ import abc
 import logging
 import os
 import pickle
+import random
 import tempfile
 from functools import cache
-from random import random
 from typing import Iterator, List, Tuple
 
 from .page import SitemapPage
