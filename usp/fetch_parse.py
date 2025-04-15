@@ -672,7 +672,7 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
             n_sample = max(0, self._max_n_sitemap[0])
             log.info(
                 "Sampling %d sub-sitemap from %d.",
-                self._max_n_sitemap[0],
+                n_sample,
                 len(self._sub_sitemap_urls),
             )
             self._sub_sitemap_urls = random.sample(self._sub_sitemap_urls, n_sample)

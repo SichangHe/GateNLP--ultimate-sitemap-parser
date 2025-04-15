@@ -360,10 +360,9 @@ class AbstractIndexSitemap(AbstractSitemap):
         """
         super().__init__(url=url, max_n_sitemap=max_n_sitemap)
         if len(max_n_sitemap) > 0 and len(sub_sitemaps) > max_n_sitemap[0]:
-            log.info(
-                "Sampling %d sub-sitemap from %d.", max_n_sitemap[0], len(sub_sitemaps)
-            )
-            sub_sitemaps = random.sample(sub_sitemaps, max_n_sitemap[0])
+            n_sample = max(0, max_n_sitemap[0])
+            log.info("Sampling %d sub-sitemap from %d.", n_sample, len(sub_sitemaps))
+            sub_sitemaps = random.sample(sub_sitemaps, n_sample)
         else:
             log.info("Found %d sub-sitemaps.", len(sub_sitemaps))
         self.__sub_sitemaps = sub_sitemaps
