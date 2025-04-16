@@ -432,7 +432,7 @@ class XMLSitemapParser(AbstractSitemapParser):
         except Exception as ex:
             # Some sitemap XML files might end abruptly because webservers might be timing out on returning huge XML
             # files so don't return InvalidSitemap() but try to get as much pages as possible
-            log.error(
+            log.warning(
                 f"Parsing sitemap from URL {self._url} failed: {ex}",
                 exc_info=True,
                 stack_info=True,
@@ -803,7 +803,7 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
             # Required
             url = html_unescape_strip(self.url)
             if not url:
-                log.error("URL is unset")
+                log.warning("URL is unset")
                 return None
 
             last_modified_str = html_unescape_strip(self.last_modified)
@@ -1112,14 +1112,14 @@ class PagesRSSSitemapParser(AbstractXMLSitemapParser):
             # Required
             link = html_unescape_strip(self.link)
             if not link:
-                log.error("Link is unset")
+                log.warning("Link is unset")
                 return None
 
             title = html_unescape_strip(self.title)
             description = html_unescape_strip(self.description)
             title_or_desc = title or description
             if not title_or_desc:
-                log.error("Both title and description are unset")
+                log.warning("Both title and description are unset")
                 return None
 
             publication_date_str = html_unescape_strip(self.publication_date)
@@ -1253,14 +1253,14 @@ class PagesAtomSitemapParser(AbstractXMLSitemapParser):
             # Required
             link = html_unescape_strip(self.link)
             if not link:
-                log.error("Link is unset")
+                log.warning("Link is unset")
                 return None
 
             title = html_unescape_strip(self.title)
             description = html_unescape_strip(self.description)
             title_or_desc = title or description
             if not title_or_desc:
-                log.error("Both title and description are unset")
+                log.warning("Both title and description are unset")
                 return None
 
             publication_date_str = html_unescape_strip(self.publication_date)
