@@ -321,7 +321,7 @@ class IndexRobotsTxtSitemapParser(AbstractSitemapParser):
                 if is_http_url(sitemap_url):
                     sitemap_urls[sitemap_url] = True
                 else:
-                    log.warning(
+                    log.debug(
                         f"Sitemap URL {sitemap_url} doesn't look like an URL, skipping"
                     )
 
@@ -370,7 +370,7 @@ class PlainTextSitemapParser(AbstractSitemapParser):
             if is_http_url(story_url):
                 story_urls[story_url] = True
             else:
-                log.warning(f"Story URL {story_url} doesn't look like an URL, skipping")
+                log.debug(f"Story URL {story_url} doesn't look like an URL, skipping")
 
         pages = []
         for page_url in story_urls.keys():
@@ -653,7 +653,7 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
         if name == "sitemap:loc":
             sub_sitemap_url = html_unescape_strip(self._last_char_data)
             if not is_http_url(sub_sitemap_url):
-                log.warning(
+                log.debug(
                     f"Sub-sitemap URL does not look like one: {sub_sitemap_url}"
                 )
 
@@ -803,7 +803,7 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
             # Required
             url = html_unescape_strip(self.url)
             if not url:
-                log.warning("URL is unset")
+                log.debug("URL is unset")
                 return None
 
             last_modified_str = html_unescape_strip(self.last_modified)
@@ -817,7 +817,7 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
                 if SitemapPageChangeFrequency.has_value(change_frequency_str):
                     change_frequency = SitemapPageChangeFrequency(change_frequency_str)
                 else:
-                    log.warning(
+                    log.debug(
                         "Invalid change frequency, defaulting to 'always'.".format()
                     )
                     change_frequency = SitemapPageChangeFrequency.ALWAYS
@@ -831,10 +831,10 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
                     priority = Decimal(priority)
 
                     if priority < MIN_VALID_PRIORITY or priority > MAX_VALID_PRIORITY:
-                        log.warning(f"Priority is not within 0 and 1: {priority}")
+                        log.debug(f"Priority is not within 0 and 1: {priority}")
                         priority = SITEMAP_PAGE_DEFAULT_PRIORITY
                 except InvalidOperation:
-                    log.warning(f"Invalid priority: {priority}")
+                    log.debug(f"Invalid priority: {priority}")
                     priority = SITEMAP_PAGE_DEFAULT_PRIORITY
             else:
                 priority = SITEMAP_PAGE_DEFAULT_PRIORITY
@@ -944,9 +944,9 @@ class PagesXMLSitemapParser(AbstractXMLSitemapParser):
                     "Page is expected to be set before <link>."
                 )
             if "rel" not in attrs or attrs["rel"] != "alternate":
-                log.warning(f"<link> element is missing rel attribute: {attrs}.")
+                log.debug(f"<link> element is missing rel attribute: {attrs}.")
             elif "hreflang" not in attrs or "href" not in attrs:
-                log.warning(
+                log.debug(
                     f"<link> element is missing hreflang or href attributes: {attrs}."
                 )
             else:
@@ -1112,14 +1112,14 @@ class PagesRSSSitemapParser(AbstractXMLSitemapParser):
             # Required
             link = html_unescape_strip(self.link)
             if not link:
-                log.warning("Link is unset")
+                log.debug("Link is unset")
                 return None
 
             title = html_unescape_strip(self.title)
             description = html_unescape_strip(self.description)
             title_or_desc = title or description
             if not title_or_desc:
-                log.warning("Both title and description are unset")
+                log.debug("Both title and description are unset")
                 return None
 
             publication_date_str = html_unescape_strip(self.publication_date)
@@ -1253,14 +1253,14 @@ class PagesAtomSitemapParser(AbstractXMLSitemapParser):
             # Required
             link = html_unescape_strip(self.link)
             if not link:
-                log.warning("Link is unset")
+                log.debug("Link is unset")
                 return None
 
             title = html_unescape_strip(self.title)
             description = html_unescape_strip(self.description)
             title_or_desc = title or description
             if not title_or_desc:
-                log.warning("Both title and description are unset")
+                log.debug("Both title and description are unset")
                 return None
 
             publication_date_str = html_unescape_strip(self.publication_date)
