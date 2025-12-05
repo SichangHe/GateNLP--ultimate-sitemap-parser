@@ -435,7 +435,6 @@ class XMLSitemapParser(AbstractSitemapParser):
             log.warning(
                 f"Parsing sitemap from URL {self._url} failed: {ex}",
                 exc_info=True,
-                stack_info=True,
             )
 
         if not self._concrete_parser:
@@ -653,9 +652,7 @@ class IndexXMLSitemapParser(AbstractXMLSitemapParser):
         if name == "sitemap:loc":
             sub_sitemap_url = html_unescape_strip(self._last_char_data)
             if not is_http_url(sub_sitemap_url):
-                log.debug(
-                    f"Sub-sitemap URL does not look like one: {sub_sitemap_url}"
-                )
+                log.debug(f"Sub-sitemap URL does not look like one: {sub_sitemap_url}")
 
             else:
                 if sub_sitemap_url not in self._sub_sitemap_urls:
