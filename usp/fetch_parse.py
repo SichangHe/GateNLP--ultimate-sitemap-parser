@@ -429,6 +429,8 @@ class XMLSitemapParser(AbstractSitemapParser):
         try:
             is_final = True
             parser.Parse(self._content, is_final)
+            # NOTE: "Unsupported root element 'html'"
+            # usually means the page got redirected (e.g. 404 or `/`)
         except Exception as ex:
             # Some sitemap XML files might end abruptly because webservers might be timing out on returning huge XML
             # files so don't return InvalidSitemap() but try to get as much pages as possible
